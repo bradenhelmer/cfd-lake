@@ -1,0 +1,14 @@
+[project]
+authors = ["Braden Helmer <bradenhelmeraus@gmail.com>"]
+channels = ["conda-forge", "https://conda.modular.com/max"]
+description = "Add a short description here"
+name = "lake-mojo"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+clean = "rm *.dat *.png"
+lake = "mojo run lake.mojo 128 5 1.0 8 && gnuplot heatmap.gnu"
+
+[dependencies]
+max = ">=24.6.0,<25"
