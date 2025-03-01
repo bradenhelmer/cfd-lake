@@ -130,10 +130,10 @@ void init_pebbles(double *p, int pn, int n) {
   srand(time(NULL));
   memset(p, 0, sizeof(double) * n * n);
 
-  p[32 * 128 + 32] = 2;
-  p[32 * 128 + 96] = 2;
-  p[96 * 128 + 32] = 2;
-  p[96 * 128 + 96] = 2;
+  p[64  * 256 + 64] = 2;
+  p[64  * 256 + 192] = 2;
+  p[192 * 256 + 64] = 2;
+  p[192 * 256 + 192] = 2;
 
   // for (k = 0; k < pn; k++) {
   //   i = rand() % (n - 4) + 2;

@@ -86,6 +86,8 @@ __global__ void d_evolve(double *d_un, double *d_uc, double *d_uo,
   int idx = (blockIdx.y * blockDim.y + threadIdx.y) * p_row +
             (blockIdx.x * blockDim.x + threadIdx.x) + p_offset;
 
+  printf("Running in d_evolve\n");
+
   d_un[idx] =
       2 * d_uc[idx] - d_uo[idx] +
       VSQR * (dt * dt) *
@@ -154,7 +156,7 @@ void run_gpu(double *u, double *u0, double *u1, double *pebbles, int n,
   cudaMemcpy(d_pebbles, pebbles, sizeof(double) * n * n,
              cudaMemcpyHostToDevice);
 
-  do {
+  while (1) {
     d_evolve<<<grid_size, block_size>>>(d_un, d_uc, d_uo, d_pebbles, n, h, dt,
                                         t);
 
@@ -162,8 +164,10 @@ void run_gpu(double *u, double *u0, double *u1, double *pebbles, int n,
     d_uo = d_uc;
     d_uc = d_un;
     d_un = temp;
-  } while (tpdt(&t, dt, end_time));
-  //    } while (0);
+
+    if (!tpdt(&t, dt, end_time))
+      break;
+  }
 
   // memcpy: Device -> Host
   for (int i = 0; i < n; i++) {

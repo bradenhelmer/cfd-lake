@@ -22,10 +22,10 @@ fn init_pebbles(mut p: List[Float32], pn: UInt32, n: UInt32) -> None:
 
     # var i64_casted: UInt64 = n.cast[DType.uint64]()
 
-    p[32*128 + 32] = 2
-    p[32*128 + 96] = 2
-    p[96*128 + 32] = 2
-    p[96*128 + 96] = 2
+    p[64  * 256 + 64] = 2;
+    p[64  * 256 + 192] = 2;
+    p[192 * 256 + 64] = 2;
+    p[192 * 256 + 192] = 2;
 
      # for _ in range(pn):
      #     var i: UInt64 = random_ui64(2, i64_casted - 3)
