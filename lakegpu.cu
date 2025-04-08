@@ -86,8 +86,6 @@ __global__ void d_evolve(double *d_un, double *d_uc, double *d_uo,
   int idx = (blockIdx.y * blockDim.y + threadIdx.y) * p_row +
             (blockIdx.x * blockDim.x + threadIdx.x) + p_offset;
 
-  printf("Running in d_evolve\n");
-
   d_un[idx] =
       2 * d_uc[idx] - d_uo[idx] +
       VSQR * (dt * dt) *

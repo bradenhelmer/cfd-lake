@@ -18,5 +18,5 @@ plot 'lake_f_gpu_cuda.dat' using 2:1:3 with image
 set output 'lake_f_mojo.png'
 plot 'lake_f_mojo.dat' using 2:1:3 with image
 
-# set output 'lake_f_gpu_mojo.png'
-# plot 'lake_f_gpu_mojo.dat' using 2:1:3 with image
+set output 'lake_f_gpu_mojo.png'
+plot 'lake_f_gpu_mojo.dat' using 2:1:3 with image

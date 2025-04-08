@@ -130,8 +130,8 @@ void init_pebbles(double *p, int pn, int n) {
   srand(time(NULL));
   memset(p, 0, sizeof(double) * n * n);
 
-  p[64  * 256 + 64] = 2;
-  p[64  * 256 + 192] = 2;
+  p[64 * 256 + 64] = 2;
+  p[64 * 256 + 192] = 2;
   p[192 * 256 + 64] = 2;
   p[192 * 256 + 192] = 2;
 

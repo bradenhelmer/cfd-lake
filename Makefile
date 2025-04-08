@@ -11,11 +11,14 @@ lake_cuda: lakegpu.cu lake.cu
 run_cuda: lake_cuda
 	./lake_cuda $(NPOINTS) $(NPEBS) $(TIME) $(NTHREADS)
 
-lake_mojo: lake.mojo
-	mojo build -O0 lake.mojo -o lake_mojo
+lake_mojo: lake.mojo lakegpu.mojo
+	mojo build -g lake.mojo -o lake_mojo
 
 run_mojo: lake_mojo
 	./lake_mojo $(NPOINTS) $(NPEBS) $(TIME) $(NTHREADS)
+
+debug_mojo: lake_mojo
+	cuda-gdb --silent --args ./lake_mojo $(NPOINTS) $(NPEBS) $(TIME) $(NTHREADS)
 
 run: run_mojo run_cuda plot
 
