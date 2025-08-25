@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 
 #define _USE_MATH_DEFINES
 
@@ -26,8 +27,8 @@ void evolve_mpi(double *un, double *uc, double *uo, double *pebbles, int n,
                 double h, double dt, double t, int chunk_size);
 extern int tpdt(double *t, double dt, double end_time);
 void print_heatmap(const char *filename, double *u, int n, double h);
-void print_heatmap(const char *filename, double *u, int n, double h,
-                   int chunk_width);
+void print_heatmap_chunk(const char *filename, double *u, int n, double h,
+                         int chunk_width);
 void init_pebbles(double *p, int pn, int n);
 void run_cpu_mpi(double *u, double *u0, double *u1, double *pebbles, int n,
                  double h, double end_time, int proc_rank, int numprocs);
@@ -140,7 +141,7 @@ int main(int argc, char *argv[]) {
   // Proc specific data files for CPU
   char filename[25];
   snprintf(filename, 25, "lake_f_mpi_cpu_%d.dat", rank);
-  print_heatmap(filename, chunk_uCPU, npoints, h, npoints / size);
+  print_heatmap_chunk(filename, chunk_uCPU, npoints, h, npoints / size);
 
   // BEGIN GPU MPI
   if (rank == ROOT) {
@@ -177,7 +178,7 @@ int main(int argc, char *argv[]) {
 
   // Proc specific data files for GPU
   snprintf(filename, 25, "lake_f_mpi_gpu_%d.dat", rank);
-  print_heatmap(filename, chunk_uGPU, npoints, h, npoints / size);
+  print_heatmap_chunk(filename, chunk_uGPU, npoints, h, npoints / size);
 
   // Free all chunk memory
   free(chunk_u0);
@@ -368,8 +369,8 @@ void print_heatmap(const char *filename, double *u, int n, double h) {
   fclose(fp);
 }
 
-void print_heatmap(const char *filename, double *u, int n, double h,
-                   int chunk_width) {
+void print_heatmap_chunk(const char *filename, double *u, int n, double h,
+                         int chunk_width) {
   int i, j, idx;
 
   FILE *fp = fopen(filename, "w");

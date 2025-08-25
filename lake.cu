@@ -130,18 +130,13 @@ void init_pebbles(double *p, int pn, int n) {
   srand(time(NULL));
   memset(p, 0, sizeof(double) * n * n);
 
-  p[64 * 256 + 64] = 2;
-  p[64 * 256 + 192] = 2;
-  p[192 * 256 + 64] = 2;
-  p[192 * 256 + 192] = 2;
-
-  // for (k = 0; k < pn; k++) {
-  //   i = rand() % (n - 4) + 2;
-  //   j = rand() % (n - 4) + 2;
-  //   sz = rand() % MAX_PSZ;
-  //   idx = j + i * n;
-  //   p[idx] = (double)sz;
-  // }
+  for (k = 0; k < pn; k++) {
+    i = rand() % (n - 4) + 2;
+    j = rand() % (n - 4) + 2;
+    sz = rand() % MAX_PSZ;
+    idx = j + i * n;
+    p[idx] = (double)sz;
+  }
 }
 
 double f(double p, double t) { return -expf(-TSCALE * t) * p; }

@@ -2,12 +2,11 @@ from gpu.host import Dim
 from gpu.host import DeviceBuffer, DeviceContext
 from gpu.id import grid_dim, block_dim, block_idx, thread_idx
 from math import exp
-from max.driver import Accelerator, Device, accelerator, cpu
 from sys import exit, has_accelerator
 
 from lake import VSQR, TSCALE, tpdt
 
-alias BUFFER_TYPE = DeviceBuffer[DType.float64]
+alias BUFFER_TYPE = UnsafePointer[Float64]
 
 
 # GPU Kernel

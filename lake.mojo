@@ -19,20 +19,14 @@ alias VSQR = 0.1
 
 
 fn init_pebbles(mut p: List[Float64], pn: UInt32, n: UInt32) -> None:
-    memset_zero(p.data, p.capacity)
+    memset_zero(p.unsafe_ptr(), p.capacity)
 
-    # var i64_casted: UInt64 = n.cast[DType.uint64]()
-
-    p[64 * 256 + 64] = 2
-    p[64 * 256 + 192] = 2
-    p[192 * 256 + 64] = 2
-    p[192 * 256 + 192] = 2
-
-    # for _ in range(pn):
-    #     var i: UInt64 = random_ui64(2, i64_casted - 3)
-    #     var j: UInt64 = random_ui64(2, i64_casted - 3)
-    #     var sz: UInt64 = random_ui64(1, 10)
-    #     p[Int(j + i * i64_casted)] = sz.cast[DType.float64]()
+    var i64_casted: UInt64 = n.cast[DType.uint64]()
+    for _ in range(pn):
+        var i: UInt64 = random_ui64(2, i64_casted - 3)
+        var j: UInt64 = random_ui64(2, i64_casted - 3)
+        var sz: UInt64 = random_ui64(1, 10)
+        p[Int(j + i * i64_casted)] = sz.cast[DType.float64]()
 
 
 fn f(p: Float64, t: Float64) -> Float64:
@@ -144,8 +138,8 @@ fn run_cpu(
     var uc: List[Float64] = List[Float64](capacity=Int(n * n))
     var uo: List[Float64] = List[Float64](capacity=Int(n * n))
 
-    memcpy(uo.data, u0.data, u0.capacity)
-    memcpy(uc.data, u1.data, u1.capacity)
+    memcpy(uo.unsafe_ptr(), u0.unsafe_ptr(), u0.capacity)
+    memcpy(uc.unsafe_ptr(), u1.unsafe_ptr(), u1.capacity)
 
     var t: Float64 = 0.0
     var dt: Float64 = h / 2.0
@@ -160,7 +154,7 @@ fn run_cpu(
         if not tpdt(t, dt, end_time):
             break
 
-    memcpy(u.data, un.data, un.capacity)
+    memcpy(u.unsafe_ptr(), un.unsafe_ptr(), un.capacity)
 
 
 fn main() raises:

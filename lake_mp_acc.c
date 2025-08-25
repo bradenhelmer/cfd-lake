@@ -28,9 +28,19 @@
  **************************************/
 #ifdef _OPENMP
 #include <omp.h>
+#define DATA_INIT_FILE "lake_i_omp.dat"
+#define DATA_FINAL_FILE "lake_f_omp.dat"
 #endif
 #ifdef _OPENACC
 #include <openacc.h>
+#define DATA_INIT_FILE "lake_i_acc.dat"
+#define DATA_FINAL_FILE "lake_f_acc.dat"
+#endif
+#ifndef DATA_INIT_FILE
+#define DATA_INIT_FILE "lake_i.dat"
+#endif
+#ifndef DATA_FINAL_FILE
+#define DATA_FINAL_FILE "lake_f.dat"
 #endif
 #include <math.h>
 #include <stdio.h>
@@ -128,7 +138,7 @@ int main(int argc, char *argv[]) {
   lake_log("printing initial configuration file\n");
 #endif
 
-  print_heatmap("lake_i.dat", u_i0, npoints, h);
+  print_heatmap(DATA_INIT_FILE, u_i0, npoints, h);
 
   /* time, run the simulation */
 #ifdef __DEBUG
@@ -139,7 +149,7 @@ int main(int argc, char *argv[]) {
 #ifdef _OPENACC
 #pragma acc enter data copyin(u_i0[ : npoints * npoints],                      \
                               u_i1[ : npoints * npoints],                      \
-                              pebs[ : npoints * npoints]),
+                              pebs[ : npoints * npoints])
 #endif
 
   gettimeofday(&cpu_start, NULL);
@@ -155,7 +165,7 @@ int main(int argc, char *argv[]) {
   lake_log("printing final configuration file\n");
 #endif
 
-  print_heatmap("lake_f.dat", u_cpu, npoints, h);
+  print_heatmap(DATA_FINAL_FILE, u_cpu, npoints, h);
 
 #ifdef __DEBUG
   lake_log("freeing memory\n");
@@ -168,7 +178,7 @@ int main(int argc, char *argv[]) {
   free(u_cpu);
 
   stop_lake_log();
-  return 1;
+  return 0;
 }
 
 /*****************************
@@ -272,12 +282,12 @@ void run_sim(double *u, double *u0, double *u1, double *pebbles, int n,
     //**P3** Device instead
 #else
 #define QUEUE_ID 1
-    acc_memcpy_device(uc, uc + (n * (n + 4)), sizeof(double) * (n + 4) * 2);
-    acc_memcpy_device(uc + ((n + 4) * (n + 2)), uc + ((n + 4) * 2),
-                      sizeof(double) * (n + 4) * 2);
+    acc_memcpy_to_device(uc, uc + (n * (n + 4)), sizeof(double) * (n + 4) * 2);
+    acc_memcpy_to_device(uc + ((n + 4) * (n + 2)), uc + ((n + 4) * 2),
+                         sizeof(double) * (n + 4) * 2);
 // **P3** OpenACC parallelization for outer loop
-#pragma acc kernels loop deviceptr(uo, uc, un)                                 \
-    present(pebbles) private(idx, idx_p) // async(QUEUE_ID)
+#pragma acc kernels loop deviceptr(uo, uc, un) present(pebbles)                \
+    private(idx, idx_p) // async(QUEUE_ID)
 #endif
 
     // **V1** Parallelize both loops.

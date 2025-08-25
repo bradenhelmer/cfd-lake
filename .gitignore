@@ -1,4 +1,11 @@
 lake_mojo
 lake_cuda
+lake_mpi
+lake_openacc
+lake_openmp
+lake.log
 *.dat
 *.png
+# pixi environments
+.pixi/*
+!.pixi/config.toml

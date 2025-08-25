@@ -1,0 +1,12 @@
+[workspace]
+authors = ["Braden Helmer <bradenhelmeraus@gmail.com>"]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
+name = "cfd-lake"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+mojo = "25.5.*"
+max = "25.5.*"
