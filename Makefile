@@ -1,5 +1,5 @@
 # Simulation parameters
-NPOINTS = 256
+NPOINTS = 1024
 NPEBS = 4
 TIME = 1.0
 NTHREADS = 8
@@ -14,17 +14,17 @@ MPIFLAGS = -lmpi
 
 # Target executables
 TARGETS = lake_cuda lake_mojo lake_openmp lake_openacc lake_mpi
-MP_ACC_FILES = lake_mp_acc.c lake.h lake_util.h
+MP_ACC_FILES = mp_acc/lake_mp_acc.c common/lake.h common/lake_util.h
 
 all: $(TARGETS)
 
 # CUDA Implementation
-lake_cuda: lakegpu.cu lake.cu
+lake_cuda: cpu_cuda/lakegpu.cu cpu_cuda/lake.cu
 	$(NVCC) $^ -o $@ -O0 -lm
 
 # Mojo Implementation
-lake_mojo: lake.mojo lakegpu.mojo
-	pixi run mojo build -g $< -o $@
+lake_mojo: mojo/lake.mojo mojo/lakegpu.mojo
+	uv run mojo build -g $< -o $@
 
 # OpenMP/ACC implementations
 lake_openacc: $(MP_ACC_FILES)

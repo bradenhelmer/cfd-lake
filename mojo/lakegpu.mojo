@@ -1,21 +1,22 @@
-from gpu.host import Dim
-from gpu.host import DeviceBuffer, DeviceContext
-from gpu.id import grid_dim, block_dim, block_idx, thread_idx
-from math import exp
-from sys import exit, has_accelerator
+from max.gpu.host.dim import Dim
+from max.gpu.host import DeviceContext
+from std.gpu import grid_dim, block_dim, block_idx, thread_idx
+from std.math import exp
+from std.sys import exit, has_accelerator
 
 from lake import VSQR, TSCALE, tpdt
 
-alias BUFFER_TYPE = UnsafePointer[Float64]
+comptime BUFFER_TYPE = Pointer[Float64, MutUntrackedOrigin]
+
 
 
 # GPU Kernel
-fn evolve(
+def evolve(
     d_un: BUFFER_TYPE,
     d_uc: BUFFER_TYPE,
     d_uo: BUFFER_TYPE,
     pebbles: BUFFER_TYPE,
-    n: UInt32,
+    n: Int,
     h: Float64,
     dt: Float64,
     t: Float64,
@@ -26,50 +27,52 @@ fn evolve(
     var i: Int = (block_idx.y * block_dim.y + thread_idx.y) * row + (
         block_idx.x * block_dim.x + thread_idx.x
     )
-    var idx: Int = (block_idx.y * block_dim.y + thread_idx.y) * p_row + (
-        block_idx.x * block_dim.x + thread_idx.x
-    ) + p_offset
+    var idx: Int = (
+        (block_idx.y * block_dim.y + thread_idx.y) * p_row
+        + (block_idx.x * block_dim.x + thread_idx.x)
+        + p_offset
+    )
 
-    fn d_f(p: Float64, t: Float64) -> Float64:
+    def d_f(p: Float64, t: Float64) -> Float64:
         return -exp(-TSCALE * t) * p
 
-    d_un[idx] = (
-        2 * d_uc[idx]
-        - d_uo[idx]
+    d_un[unsafe_offset=idx] = (
+        2 * d_uc[unsafe_offset=idx]
+        - d_uo[unsafe_offset=idx]
         + VSQR
         * (dt * dt)
         * (
             (
                 1
                 * (
-                    d_uc[idx - 1]
-                    + d_uc[idx + 1]
-                    + d_uc[idx + p_row]
-                    + d_uc[idx - p_row]
+                    d_uc[unsafe_offset=idx - 1]
+                    + d_uc[unsafe_offset=idx + 1]
+                    + d_uc[unsafe_offset=idx + p_row]
+                    + d_uc[unsafe_offset=idx - p_row]
                 )
                 + 0.25
                 * (
-                    d_uc[idx + p_row - 1]
-                    + d_uc[idx + p_row + 1]
-                    + d_uc[idx - p_row - 1]
-                    + d_uc[idx - p_row + 1]
+                    d_uc[unsafe_offset=idx + p_row - 1]
+                    + d_uc[unsafe_offset=idx + p_row + 1]
+                    + d_uc[unsafe_offset=idx - p_row - 1]
+                    + d_uc[unsafe_offset=idx - p_row + 1]
                 )
                 + 0.125
                 * (
-                    d_uc[idx - 2]
-                    + d_uc[idx + 2]
-                    + d_uc[idx + p_row + p_row]
-                    + d_uc[idx - p_row - p_row]
+                    d_uc[unsafe_offset=idx - 2]
+                    + d_uc[unsafe_offset=idx + 2]
+                    + d_uc[unsafe_offset=idx + p_row + p_row]
+                    + d_uc[unsafe_offset=idx - p_row - p_row]
                 )
-                - 5.5 * d_uc[idx]
+                - 5.5 * d_uc[unsafe_offset=idx]
             )
             / (h * h)
-            + d_f(pebbles[i], t)
+            + d_f(pebbles[unsafe_offset=i], t)
         )
     )
 
 
-fn run_gpu(
+def run_gpu(
     mut u: List[Float64],
     u0: List[Float64],
     u1: List[Float64],
@@ -143,7 +146,7 @@ fn run_gpu(
         d_uc = d_un
         d_un = temp
 
-        fn tpdt(mut t: Float64, dt: Float64, tf: Float64) -> Int:
+        def tpdt(mut t: Float64, dt: Float64, tf: Float64) -> Int:
             if (t + dt) > tf:
                 return 0
             t += dt

@@ -1,25 +1,25 @@
-from collections import List
-from collections.string import atof
-from collections.string import atol
-from math import exp
-from memory import AddressSpace
-from memory import memcpy
-from memory import memset_zero
-from random import seed
-from random import random_ui64
-from sys.terminate import exit
-from sys import argv
-from time import time_function
+from std.collections.list import List
+from std.collections.string import atof
+from std.collections.string import atol
+from std.math import exp
+from std.memory.address_space import AddressSpace
+from std.memory.memory import unsafe_memcpy
+from std.memory.memory import unsafe_memset_zero
+from std.random import seed
+from std.random import random_ui64
+from std.sys.terminate import exit
+from std.sys import argv
+from std.time import time_function
 
 from lakegpu import run_gpu
 
 
-alias TSCALE = 1.0
-alias VSQR = 0.1
+comptime TSCALE = 1.0
+comptime VSQR = 0.1
 
 
-fn init_pebbles(mut p: List[Float64], pn: UInt32, n: UInt32) -> None:
-    memset_zero(p.unsafe_ptr(), p.capacity)
+def init_pebbles(mut p: List[Float64], pn: Int, n: Int) -> None:
+    unsafe_memset_zero(p.unsafe_ptr(), p.capacity())
 
     var i64_casted: UInt64 = n.cast[DType.uint64]()
     for _ in range(pn):
@@ -28,31 +28,30 @@ fn init_pebbles(mut p: List[Float64], pn: UInt32, n: UInt32) -> None:
         var sz: UInt64 = random_ui64(1, 10)
         p[Int(j + i * i64_casted)] = sz.cast[DType.float64]()
 
-
-fn f(p: Float64, t: Float64) -> Float64:
+def f(p: Float64, t: Float64) -> Float64:
     return -exp(-TSCALE * t) * p
 
 
-fn tpdt(mut t: Float64, dt: Float64, tf: Float64) -> UInt32:
+def tpdt(mut t: Float64, dt: Float64, tf: Float64) -> Int:
     if (t + dt) > tf:
         return 0
     t += dt
     return 1
 
 
-fn init(mut u: List[Float64], pebbles: List[Float64]) -> None:
+def init(mut u: List[Float64], pebbles: List[Float64]) -> None:
     for idx in range(len(u)):
         u[idx] = f(pebbles[idx], 0.0)
 
 
-fn print_heatmap(
-    filename: String, u: List[Float64], n: UInt32, h: Float64
+def print_heatmap(
+    filename: String, u: List[Float64], n: Int, h: Float64
 ) -> None:
     try:
         with open(filename, "w") as out_file:
             for i in range(n):
                 for j in range(n):
-                    var idx: UInt32 = j + i * n
+                    var idx: Int = j + i * n
                     var out_str: String = "{} {} {}\n".format(
                         i.cast[DType.float64]() * h,
                         j.cast[DType.float64]() * h,
@@ -63,12 +62,12 @@ fn print_heatmap(
         print("Error writing results to file: ", e)
 
 
-fn evolve(
+def evolve(
     mut un: List[Float64],
     uc: List[Float64],
     uo: List[Float64],
     pebbles: List[Float64],
-    n: UInt32,
+    n: Int,
     h: Float64,
     dt: Float64,
     t: Float64,
@@ -125,12 +124,12 @@ fn evolve(
                 )
 
 
-fn run_cpu(
+def run_cpu(
     mut u: List[Float64],
     u0: List[Float64],
     u1: List[Float64],
     pebbles: List[Float64],
-    n: UInt32,
+    n: Int,
     h: Float64,
     end_time: Float64,
 ) -> None:
@@ -138,26 +137,30 @@ fn run_cpu(
     var uc: List[Float64] = List[Float64](capacity=Int(n * n))
     var uo: List[Float64] = List[Float64](capacity=Int(n * n))
 
-    memcpy(uo.unsafe_ptr(), u0.unsafe_ptr(), u0.capacity)
-    memcpy(uc.unsafe_ptr(), u1.unsafe_ptr(), u1.capacity)
+    unsafe_memcpy(
+        dest=uo.unsafe_ptr(), src=u0.unsafe_ptr(), count=u0.capacity()
+    )
+    unsafe_memcpy(
+        dest=uc.unsafe_ptr(), src=u1.unsafe_ptr(), count=u1.capacity()
+    )
 
     var t: Float64 = 0.0
     var dt: Float64 = h / 2.0
 
     while 1:
         evolve(un, uc, uo, pebbles, n, h, dt, t)
-        var temp = uo
-        uo = uc
-        uc = un
-        un = temp
+        var temp = uo^
+        uo = uc^
+        uc = un^
+        un = temp^
 
         if not tpdt(t, dt, end_time):
             break
 
-    memcpy(u.unsafe_ptr(), un.unsafe_ptr(), un.capacity)
+    unsafe_memcpy(dest=u.unsafe_ptr(), src=un.unsafe_ptr(), count=un.capacity())
 
 
-fn main() raises:
+def main() raises:
     print("Running mojo lake simulation...")
 
     var args = argv()
@@ -165,10 +168,10 @@ fn main() raises:
         print("Usage: mojo run lake.mojo npoints npebs time_finish nthreads")
         exit(1)
 
-    var npoints: UInt32 = 0
-    var npebs: UInt32 = 0
+    var npoints: Int = 0
+    var npebs: Int = 0
     var end_time: Float64 = 0.0
-    var nthreads: UInt32 = 0
+    var nthreads: Int = 0
 
     try:
         npoints = atol(args[1])
@@ -178,7 +181,7 @@ fn main() raises:
     except e:
         print("Error converting argument to int or float: ", e)
 
-    var narea: UInt32 = npoints * npoints
+    var narea: Int = npoints * npoints
 
     var u_i0: List[Float64] = List[Float64](capacity=Int(narea))
     var u_i1: List[Float64] = List[Float64](capacity=Int(narea))
@@ -203,7 +206,7 @@ fn main() raises:
     print_heatmap("lake_i_mojo.dat", u_i0, npoints, h)
 
     run_cpu(u_cpu, u_i0, u_i1, pebs, npoints, h, end_time)
-    run_gpu(u_gpu, u_i0, u_i1, pebs, npoints, h, end_time, nthreads)
+    # run_gpu(u_gpu, u_i0, u_i1, pebs, npoints, h, end_time, nthreads)
 
     print_heatmap("lake_f_mojo.dat", u_cpu, npoints, h)
     print_heatmap("lake_f_gpu_mojo.dat", u_gpu, npoints, h)

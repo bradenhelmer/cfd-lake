@@ -48,8 +48,8 @@
 #include <string.h>
 #include <sys/time.h>
 
-#include "./lake.h"
-#include "./lake_util.h"
+#include "../common/lake.h"
+#include "../common/lake_util.h"
 
 /* Probably not necessary but doesn't hurt */
 #define _USE_MATH_DEFINES

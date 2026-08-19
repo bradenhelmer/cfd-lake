@@ -1,0 +1,10 @@
+[project]
+name = "cfd-lake"
+version = "0.1.0"
+description = "2D Finite Difference Simulations - Pebbles on Lake"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+  "mojo",
+  "max"
+]
